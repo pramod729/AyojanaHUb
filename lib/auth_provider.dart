@@ -4,14 +4,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-
 class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   User? _user;
   UserModel? _userModel;
   bool _isLoading = false;
+  String? _resetPasswordEmail;
 
   User? get user => _user;
   UserModel? get userModel => _userModel;
@@ -32,7 +32,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _loadUserData() async {
     if (_user == null) return;
-    
+
     try {
       final doc = await _firestore.collection('users').doc(_user!.uid).get();
       if (doc.exists) {
@@ -40,7 +40,32 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error loading user data: $e');
+      debugPrint('Error loading user data: $e');
+    }
+  }
+
+  String _getFirebaseErrorMessage(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'No account found with this email address';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again';
+      case 'invalid-email':
+        return 'Please enter a valid email address';
+      case 'user-disabled':
+        return 'This account has been disabled';
+      case 'email-already-in-use':
+        return 'An account already exists with this email';
+      case 'operation-not-allowed':
+        return 'Email/password authentication is not enabled';
+      case 'weak-password':
+        return 'Password should be at least 6 characters';
+      case 'network-request-failed':
+        return 'Network error. Please check your connection';
+      case 'too-many-requests':
+        return 'Too many failed attempts. Try again later';
+      default:
+        return 'An error occurred. Please try again';
     }
   }
 
@@ -54,17 +79,61 @@ class AuthProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
+      // Email validation
+      if (!_isValidEmail(email)) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Please enter a valid email address';
+      }
+
+      // Password validation
+      if (password.length < 8) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Password must be at least 8 characters long';
+      }
+
+      // Phone validation
+      if (!_isValidPhone(phone)) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Please enter a valid phone number';
+      }
+
+      // Name validation
+      if (name.trim().isEmpty || name.trim().split(' ').length < 2) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Please enter your full name';
+      }
+
+      // Check if email already exists
+      final signInMethods =
+          await _auth.fetchSignInMethodsForEmail(email.trim());
+      if (signInMethods.isNotEmpty) {
+        _isLoading = false;
+        notifyListeners();
+        return 'An account already exists with this email address';
+      }
+
       final credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
 
+      // Update display name
+      await credential.user!.updateDisplayName(name.trim());
+
       await _firestore.collection('users').doc(credential.user!.uid).set({
-        'name': name,
-        'email': email,
-        'phone': phone,
+        'uid': credential.user!.uid,
+        'name': name.trim(),
+        'email': email.trim(),
+        'phone': phone.trim(),
+        'displayName': name.trim(),
+        'photoURL': '',
         'role': 'customer',
         'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
 
       await _loadUserData();
@@ -74,11 +143,12 @@ class AuthProvider with ChangeNotifier {
     } on FirebaseAuthException catch (e) {
       _isLoading = false;
       notifyListeners();
-      return e.message ?? 'Registration failed';
+      return _getFirebaseErrorMessage(e.code);
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      return 'An error occurred';
+      debugPrint('Registration error: $e');
+      return 'An unexpected error occurred. Please try again';
     }
   }
 
@@ -90,8 +160,22 @@ class AuthProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
+      // Email validation
+      if (!_isValidEmail(email)) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Please enter a valid email address';
+      }
+
+      // Password validation
+      if (password.isEmpty) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Please enter your password';
+      }
+
       await _auth.signInWithEmailAndPassword(
-        email: email,
+        email: email.trim(),
         password: password,
       );
 
@@ -102,18 +186,63 @@ class AuthProvider with ChangeNotifier {
     } on FirebaseAuthException catch (e) {
       _isLoading = false;
       notifyListeners();
-      return e.message ?? 'Login failed';
+      return _getFirebaseErrorMessage(e.code);
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-      return 'An error occurred';
+      debugPrint('Login error: $e');
+      return 'An unexpected error occurred. Please try again';
+    }
+  }
+
+  Future<String?> resetPassword({required String email}) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Email validation
+      if (!_isValidEmail(email)) {
+        _isLoading = false;
+        notifyListeners();
+        return 'Please enter a valid email address';
+      }
+
+      // Check if email exists
+      final signInMethods =
+          await _auth.fetchSignInMethodsForEmail(email.trim());
+      if (signInMethods.isEmpty) {
+        _isLoading = false;
+        notifyListeners();
+        return 'No account found with this email address';
+      }
+
+      await _auth.sendPasswordResetEmail(email: email.trim());
+
+      _resetPasswordEmail = email.trim();
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    } on FirebaseAuthException catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      return _getFirebaseErrorMessage(e.code);
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      debugPrint('Password reset error: $e');
+      return 'An unexpected error occurred. Please try again';
     }
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
-    _userModel = null;
-    notifyListeners();
+    try {
+      await _auth.signOut();
+      _userModel = null;
+      _resetPasswordEmail = null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Logout error: $e');
+    }
   }
 
   Future<String?> updateProfile({
@@ -123,15 +252,84 @@ class AuthProvider with ChangeNotifier {
     try {
       if (_user == null) return 'No user logged in';
 
+      // Name validation
+      if (name.trim().isEmpty) {
+        return 'Please enter your name';
+      }
+
+      // Phone validation
+      if (!_isValidPhone(phone)) {
+        return 'Please enter a valid phone number';
+      }
+
+      await _user!.updateDisplayName(name.trim());
+
       await _firestore.collection('users').doc(_user!.uid).update({
-        'name': name,
-        'phone': phone,
+        'name': name.trim(),
+        'displayName': name.trim(),
+        'phone': phone.trim(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
 
       await _loadUserData();
       return null;
     } catch (e) {
-      return 'Failed to update profile';
+      debugPrint('Update profile error: $e');
+      return 'Failed to update profile. Please try again';
     }
+  }
+
+  Future<String?> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      if (_user == null) return 'No user logged in';
+
+      final email = _user!.email;
+      if (email == null) return 'Email not found';
+
+      // Validate new password
+      if (newPassword.length < 8) {
+        return 'New password must be at least 8 characters long';
+      }
+
+      if (newPassword == currentPassword) {
+        return 'New password must be different from current password';
+      }
+
+      // Reauthenticate user
+      try {
+        await _user!.reauthenticateWithCredential(
+          EmailAuthProvider.credential(
+            email: email,
+            password: currentPassword,
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        return _getFirebaseErrorMessage(e.code);
+      }
+
+      // Update password
+      await _user!.updatePassword(newPassword);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _getFirebaseErrorMessage(e.code);
+    } catch (e) {
+      debugPrint('Change password error: $e');
+      return 'An unexpected error occurred. Please try again';
+    }
+  }
+
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$',
+    );
+    return emailRegex.hasMatch(email.trim());
+  }
+
+  bool _isValidPhone(String phone) {
+    final phoneRegex = RegExp(r'^[0-9]{10,}$');
+    return phoneRegex.hasMatch(phone.replaceAll(RegExp(r'[^\d]'), ''));
   }
 }
