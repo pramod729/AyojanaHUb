@@ -7,12 +7,17 @@ class BookingProvider with ChangeNotifier {
   
   List<BookingModel> _bookings = [];
   bool _isLoading = false;
+  String? _error;
 
   List<BookingModel> get bookings => _bookings;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   Future<void> loadMyBookings(String customerId) async {
+    if (_isLoading) return; // Prevent multiple simultaneous loads
+    
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -25,8 +30,10 @@ class BookingProvider with ChangeNotifier {
       _bookings = snapshot.docs
           .map((doc) => BookingModel.fromMap(doc.data(), doc.id))
           .toList();
+      print('Loaded ${_bookings.length} bookings');
     } catch (e) {
       print('Error loading bookings: $e');
+      _error = e.toString();
     }
 
     _isLoading = false;
@@ -38,7 +45,8 @@ class BookingProvider with ChangeNotifier {
       await _firestore.collection('bookings').add(booking.toMap());
       return null;
     } catch (e) {
-      return 'Failed to create booking';
+      print('Error creating booking: $e');
+      return 'Failed to create booking: $e';
     }
   }
 
@@ -49,7 +57,8 @@ class BookingProvider with ChangeNotifier {
       });
       return null;
     } catch (e) {
-      return 'Failed to cancel booking';
+      print('Error cancelling booking: $e');
+      return 'Failed to cancel booking: $e';
     }
   }
 }

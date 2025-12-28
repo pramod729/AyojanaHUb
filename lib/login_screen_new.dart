@@ -65,7 +65,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     if (!mounted) return;
 
     if (error == null) {
-      Navigator.pushReplacementNamed(context, '/home');
+      final userRole = authProvider.userModel?.role;
+      if (userRole == 'vendor') {
+        Navigator.pushReplacementNamed(context, '/vendor-dashboard');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } else {
       _showErrorDialog(error);
     }

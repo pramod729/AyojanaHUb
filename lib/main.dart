@@ -1,7 +1,6 @@
 import 'package:ayojana_hub/auth_provider.dart';
 import 'package:ayojana_hub/booking_provider.dart';
 import 'package:ayojana_hub/create_event_screen.dart';
-import 'package:ayojana_hub/create_vendor_screen.dart';
 import 'package:ayojana_hub/event_provider.dart';
 import 'package:ayojana_hub/firebase_options.dart';
 import 'package:ayojana_hub/forgot_password_screen_new.dart';
@@ -13,8 +12,10 @@ import 'package:ayojana_hub/profile_screen.dart';
 import 'package:ayojana_hub/register_screen_new.dart';
 import 'package:ayojana_hub/splash_screen.dart';
 import 'package:ayojana_hub/theme/app_theme.dart';
+import 'package:ayojana_hub/vendor_dashboard_screen.dart';
 import 'package:ayojana_hub/vendor_list_screen.dart';
 import 'package:ayojana_hub/vendor_provider.dart';
+import 'package:ayojana_hub/vendor_register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -54,12 +55,13 @@ class AyojanaHubApp extends StatelessWidget {
           '/splash': (context) => const SplashScreen(),
           '/login': (context) => const LoginScreen(),
           '/register': (context) => const RegisterScreen(),
+          '/vendor-register': (context) => const VendorRegisterScreen(),
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/home': (context) => const HomeScreen(),
           '/my-events': (context) => const MyEventsScreen(),
           '/create-event': (context) => const CreateEventScreen(),
           '/vendors': (context) => const VendorListScreen(),
-          '/create-vendor': (context) => const CreateVendorScreen(),
+          '/vendor-dashboard': (context) => const VendorDashboardScreen(),
           '/my-bookings': (context) => const MyBookingsScreen(),
           '/profile': (context) => const ProfileScreen(),
         },
@@ -67,3 +69,4 @@ class AyojanaHubApp extends StatelessWidget {
     );
   }
 }
+

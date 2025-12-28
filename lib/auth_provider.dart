@@ -73,6 +73,7 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String password,
     required String phone,
+    String role = 'customer',
   }) async {
     try {
       _isLoading = true;
@@ -130,7 +131,7 @@ class AuthProvider with ChangeNotifier {
         'phone': phone.trim(),
         'displayName': name.trim(),
         'photoURL': '',
-        'role': 'customer',
+        'role': role,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -317,6 +318,51 @@ class AuthProvider with ChangeNotifier {
       return 'An unexpected error occurred. Please try again';
     }
   }
+
+  Future<String?> updateVendorProfile({
+    required String businessName,
+    required String category,
+    required String description,
+    required String location,
+    required List<String> services,
+  }) async {
+    try {
+      if (_user == null) return 'No user logged in';
+
+      // Validation
+      if (businessName.trim().isEmpty) {
+        return 'Please enter your business name';
+      }
+
+      if (description.trim().isEmpty) {
+        return 'Please enter business description';
+      }
+
+      if (location.trim().isEmpty) {
+        return 'Please enter your location';
+      }
+
+      if (services.isEmpty) {
+        return 'Please select at least one service';
+      }
+
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'businessName': businessName.trim(),
+        'vendorCategory': category,
+        'vendorDescription': description.trim(),
+        'vendorLocation': location.trim(),
+        'vendorServices': services,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await _loadUserData();
+      return null;
+    } catch (e) {
+      debugPrint('Update vendor profile error: $e');
+      return 'Failed to update vendor profile. Please try again';
+    }
+  }
+
 
   bool _isValidEmail(String email) {
     final emailRegex = RegExp(

@@ -36,7 +36,7 @@ class _VendorListScreenState extends State<VendorListScreen> {
 
   Future<void> _loadVendors() async {
     final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
-    await vendorProvider.loadVendors(
+    await vendorProvider.refreshVendors(
       category: _selectedCategory == 'All' ? null : _selectedCategory,
     );
   }
@@ -46,17 +46,6 @@ class _VendorListScreenState extends State<VendorListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Find Vendors'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.pushNamed(context, '/create-vendor').then((_) {
-                _loadVendors();
-              });
-            },
-            tooltip: 'Register as Vendor',
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -100,21 +89,39 @@ class _VendorListScreenState extends State<VendorListScreen> {
                 }
 
                 if (vendorProvider.vendors.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  return RefreshIndicator(
+                    onRefresh: _loadVendors,
+                    child: ListView(
                       children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 80,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No vendors found',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.5,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.people_outline,
+                                  size: 80,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No vendors found',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Pull to refresh',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -122,13 +129,16 @@ class _VendorListScreenState extends State<VendorListScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: vendorProvider.vendors.length,
-                  itemBuilder: (context, index) {
-                    final vendor = vendorProvider.vendors[index];
-                    return _VendorCard(vendor: vendor);
-                  },
+                return RefreshIndicator(
+                  onRefresh: _loadVendors,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: vendorProvider.vendors.length,
+                    itemBuilder: (context, index) {
+                      final vendor = vendorProvider.vendors[index];
+                      return _VendorCard(vendor: vendor);
+                    },
+                  ),
                 );
               },
             ),
@@ -162,22 +172,42 @@ class _VendorCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                radius: 30,
+                radius: 40,
                 backgroundColor: const Color(0xFF6C63FF),
                 child: vendor.profileImage != null
                     ? ClipOval(
                         child: Image.network(
                           vendor.profileImage!,
                           fit: BoxFit.cover,
-                          width: 60,
-                          height: 60,
+                          width: 80,
+                          height: 80,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Text(
+                              vendor.name[0].toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 32,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(Colors.white),
+                              ),
+                            );
+                          },
                         ),
                       )
                     : Text(
                         vendor.name[0].toUpperCase(),
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 32,
                           color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
               ),

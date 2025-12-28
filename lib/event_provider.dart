@@ -7,12 +7,17 @@ class EventProvider with ChangeNotifier {
   
   List<EventModel> _events = [];
   bool _isLoading = false;
+  String? _error;
 
   List<EventModel> get events => _events;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
   Future<void> loadMyEvents(String userId) async {
+    if (_isLoading) return; // Prevent multiple simultaneous loads
+    
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -25,8 +30,10 @@ class EventProvider with ChangeNotifier {
       _events = snapshot.docs
           .map((doc) => EventModel.fromMap(doc.data(), doc.id))
           .toList();
+      print('Loaded ${_events.length} events');
     } catch (e) {
       print('Error loading events: $e');
+      _error = e.toString();
     }
 
     _isLoading = false;
@@ -38,7 +45,8 @@ class EventProvider with ChangeNotifier {
       await _firestore.collection('events').add(event.toMap());
       return null;
     } catch (e) {
-      return 'Failed to create event';
+      print('Error creating event: $e');
+      return 'Failed to create event: $e';
     }
   }
 
@@ -47,6 +55,7 @@ class EventProvider with ChangeNotifier {
       await _firestore.collection('events').doc(eventId).update(data);
       return null;
     } catch (e) {
+      print('Error updating event: $e');
       return 'Failed to update event';
     }
   }

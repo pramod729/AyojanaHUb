@@ -1,5 +1,6 @@
 class VendorModel {
   final String id;
+  final String? userId;
   final String name;
   final String category;
   final String description;
@@ -14,6 +15,7 @@ class VendorModel {
 
   VendorModel({
     required this.id,
+    this.userId,
     required this.name,
     required this.category,
     required this.description,
@@ -30,6 +32,7 @@ class VendorModel {
   factory VendorModel.fromMap(Map<String, dynamic> map, String id) {
     return VendorModel(
       id: id,
+      userId: map['userId'],
       name: map['name'] ?? '',
       category: map['category'] ?? '',
       description: map['description'] ?? '',

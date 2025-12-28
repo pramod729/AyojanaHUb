@@ -48,7 +48,12 @@ class _SplashScreenState extends State<SplashScreen>
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     if (authProvider.isAuthenticated) {
-      Navigator.pushReplacementNamed(context, '/home');
+      final userRole = authProvider.userModel?.role;
+      if (userRole == 'vendor') {
+        Navigator.pushReplacementNamed(context, '/vendor-dashboard');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }
