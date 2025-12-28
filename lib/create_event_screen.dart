@@ -26,6 +26,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final List<String> _eventTypes = [
     'Wedding',
     'Birthday Party',
+    'Family Function',
+    'Anniversary',
+    'Engagement',
+    'Reception',
+    'Baby Shower',
     'Corporate Event',
     'Seminar',
     'Workshop',
@@ -108,23 +113,36 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DropdownButtonFormField<String>(
-                value: _selectedEventType,
-                decoration: InputDecoration(
-                  labelText: 'Event Type',
-                  prefixIcon: const Icon(Icons.category),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              // Event Type selection using ChoiceChips for quicker selection
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Event Type',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
-                ),
-                items: _eventTypes.map((type) {
-                  return DropdownMenuItem(value: type, child: Text(type));
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedEventType = value!;
-                  });
-                },
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _eventTypes.map((type) {
+                      final selected = _selectedEventType == type;
+                      return ChoiceChip(
+                        label: Text(type),
+                        selected: selected,
+                        onSelected: (_) {
+                          setState(() {
+                            _selectedEventType = type;
+                          });
+                        },
+                        selectedColor: const Color(0xFF6C63FF),
+                        labelStyle: TextStyle(
+                          color: selected ? Colors.white : Colors.black,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               TextFormField(

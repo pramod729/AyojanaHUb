@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class VendorListScreen extends StatefulWidget {
-  const VendorListScreen({super.key});
+  final String? initialCategory;
+
+  const VendorListScreen({super.key, this.initialCategory});
 
   @override
   State<VendorListScreen> createState() => _VendorListScreenState();
@@ -27,6 +29,8 @@ class _VendorListScreenState extends State<VendorListScreen> {
   @override
   void initState() {
     super.initState();
+    // If an initial category was provided, apply it before loading vendors
+    _selectedCategory = widget.initialCategory;
     _loadVendors();
   }
 
@@ -42,6 +46,17 @@ class _VendorListScreenState extends State<VendorListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Find Vendors'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.pushNamed(context, '/create-vendor').then((_) {
+                _loadVendors();
+              });
+            },
+            tooltip: 'Register as Vendor',
+          ),
+        ],
       ),
       body: Column(
         children: [

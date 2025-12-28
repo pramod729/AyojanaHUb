@@ -1,6 +1,7 @@
 import 'package:ayojana_hub/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ayojana_hub/vendor_list_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -245,6 +246,97 @@ class ProfileScreen extends StatelessWidget {
                     );
                   },
                 ),
+                const SizedBox(height: 16),
+                // Find Vendors section
+                Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Find Vendors',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GridView.count(
+                          crossAxisCount: 3,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 1,
+                          children: [
+                            _VendorCategoryTile(
+                              icon: Icons.restaurant,
+                              label: 'Catering',
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VendorListScreen(initialCategory: 'Catering'),
+                                ),
+                              ),
+                            ),
+                            _VendorCategoryTile(
+                              icon: Icons.camera_alt,
+                              label: 'Photography',
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VendorListScreen(initialCategory: 'Photography'),
+                                ),
+                              ),
+                            ),
+                            _VendorCategoryTile(
+                              icon: Icons.music_note,
+                              label: 'DJ & Music',
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VendorListScreen(initialCategory: 'DJ & Music'),
+                                ),
+                              ),
+                            ),
+                            _VendorCategoryTile(
+                              icon: Icons.brush,
+                              label: 'Decoration',
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VendorListScreen(initialCategory: 'Decoration'),
+                                ),
+                              ),
+                            ),
+                            _VendorCategoryTile(
+                              icon: Icons.location_city,
+                              label: 'Venue',
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VendorListScreen(initialCategory: 'Venue'),
+                                ),
+                              ),
+                            ),
+                            _VendorCategoryTile(
+                              icon: Icons.event_note,
+                              label: 'Planning',
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => VendorListScreen(initialCategory: 'Planning'),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -303,6 +395,52 @@ class _ProfileOption extends StatelessWidget {
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+class _VendorCategoryTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _VendorCategoryTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6C63FF).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: const Color(0xFF6C63FF)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }

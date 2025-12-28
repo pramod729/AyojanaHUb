@@ -1,5 +1,7 @@
 import 'package:ayojana_hub/auth_provider.dart';
 import 'package:ayojana_hub/booking_provider.dart';
+import 'package:ayojana_hub/create_event_screen.dart';
+import 'package:ayojana_hub/create_vendor_screen.dart';
 import 'package:ayojana_hub/event_provider.dart';
 import 'package:ayojana_hub/firebase_options.dart';
 import 'package:ayojana_hub/forgot_password_screen_new.dart';
@@ -47,7 +49,7 @@ class AyojanaHubApp extends StatelessWidget {
         title: 'Ayojana Hub',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme(),
-        home: const _RootScreen(),
+        home: const SplashScreen(),
         routes: {
           '/splash': (context) => const SplashScreen(),
           '/login': (context) => const LoginScreen(),
@@ -55,28 +57,13 @@ class AyojanaHubApp extends StatelessWidget {
           '/forgot-password': (context) => const ForgotPasswordScreen(),
           '/home': (context) => const HomeScreen(),
           '/my-events': (context) => const MyEventsScreen(),
+          '/create-event': (context) => const CreateEventScreen(),
           '/vendors': (context) => const VendorListScreen(),
+          '/create-vendor': (context) => const CreateVendorScreen(),
           '/my-bookings': (context) => const MyBookingsScreen(),
           '/profile': (context) => const ProfileScreen(),
         },
       ),
-    );
-  }
-}
-
-class _RootScreen extends StatelessWidget {
-  const _RootScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
-        if (authProvider.isAuthenticated) {
-          return const HomeScreen();
-        } else {
-          return const LoginScreen();
-        }
-      },
     );
   }
 }

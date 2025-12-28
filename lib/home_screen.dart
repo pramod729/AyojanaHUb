@@ -88,7 +88,7 @@ class HomeTab extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
-                color: Color(0xFF6C63FF),
+                color: Color.fromARGB(255, 52, 52, 63),
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
                   bottomRight: Radius.circular(30),
