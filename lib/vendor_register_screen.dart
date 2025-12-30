@@ -22,7 +22,7 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
   final _descriptionController = TextEditingController();
 
   String _selectedCategory = 'Catering';
-  List<String> _selectedServices = [];
+  final List<String> _selectedServices = [];
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;

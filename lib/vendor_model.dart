@@ -46,4 +46,21 @@ class VendorModel {
       portfolioImages: List<String>.from(map['portfolioImages'] ?? []),
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'name': name,
+      'category': category,
+      'description': description,
+      'phone': phone,
+      'email': email,
+      'location': location,
+      'services': services,
+      'rating': rating,
+      'reviewCount': reviewCount,
+      'profileImage': profileImage,
+      'portfolioImages': portfolioImages,
+    };
+  }
 }

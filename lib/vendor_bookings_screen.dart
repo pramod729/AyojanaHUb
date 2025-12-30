@@ -1,19 +1,19 @@
 import 'package:ayojana_hub/auth_provider.dart';
-import 'package:ayojana_hub/booking_detail_screen.dart';
 import 'package:ayojana_hub/booking_model.dart';
 import 'package:ayojana_hub/booking_provider.dart';
+import 'package:ayojana_hub/vendor_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class MyBookingsScreen extends StatefulWidget {
-  const MyBookingsScreen({super.key});
+class VendorBookingsScreen extends StatefulWidget {
+  const VendorBookingsScreen({super.key});
 
   @override
-  State<MyBookingsScreen> createState() => _MyBookingsScreenState();
+  State<VendorBookingsScreen> createState() => _VendorBookingsScreenState();
 }
 
-class _MyBookingsScreenState extends State<MyBookingsScreen> {
+class _VendorBookingsScreenState extends State<VendorBookingsScreen> {
   String _selectedFilter = 'all';
 
   @override
@@ -25,10 +25,15 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   Future<void> _loadBookings() async {
     if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
 
     if (authProvider.user != null) {
-      await bookingProvider.loadMyBookings(authProvider.user!.uid);
+      final vendor = await vendorProvider.getVendorByUserId(authProvider.user!.uid);
+      if (!mounted) return;
+      if (vendor != null) {
+        await bookingProvider.loadVendorBookings(vendor.id);
+      }
     }
   }
 
@@ -40,18 +45,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text('My Bookings'),
-        automaticallyImplyLeading: false,
         centerTitle: true,
-        backgroundColor: Colors.white,
         elevation: 0,
       ),
       body: Column(
         children: [
           Container(
-            color: Colors.white,
             padding: const EdgeInsets.all(16),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -94,11 +95,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             child: Consumer<BookingProvider>(
               builder: (context, bookingProvider, _) {
                 if (bookingProvider.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF4F46E5),
-                    ),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (bookingProvider.error != null && bookingProvider.bookings.isEmpty) {
@@ -122,7 +119,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                           ElevatedButton(
                             onPressed: _loadBookings,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4F46E5),
+                              backgroundColor: const Color(0xFF10B981),
                             ),
                             child: const Text('Try Again'),
                           ),
@@ -139,57 +136,30 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF4F46E5).withOpacity(0.2),
-                                const Color(0xFF6366F1).withOpacity(0.1),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          child: const Icon(
-                            Icons.bookmark_border,
-                            size: 50,
-                            color: Color(0xFF4F46E5),
-                          ),
+                        Icon(
+                          Icons.event_busy,
+                          size: 80,
+                          color: Colors.grey[400],
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
                         Text(
                           _selectedFilter == 'all'
                               ? 'No bookings yet'
                               : 'No $_selectedFilter bookings',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Book vendors for your events',
+                        Text(
+                          'Bookings from customers will appear here',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Color(0xFF6B7280),
+                            color: Colors.grey[500],
                           ),
                         ),
-                        if (_selectedFilter == 'all') ...[
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: () => Navigator.pushNamed(context, '/vendors'),
-                            icon: const Icon(Icons.search),
-                            label: const Text('Find Vendors'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 14,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   );
@@ -197,13 +167,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
                 return RefreshIndicator(
                   onRefresh: _loadBookings,
-                  color: const Color(0xFF4F46E5),
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredBookings.length,
                     itemBuilder: (context, index) {
                       final booking = filteredBookings[index];
-                      return _BookingCard(
+                      return _VendorBookingCard(
                         booking: booking,
                         onRefresh: _loadBookings,
                       );
@@ -237,14 +206,14 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFF3F4F6),
+          color: isSelected ? const Color(0xFF6C63FF) : Colors.grey[200],
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color(0xFF6B7280),
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected ? Colors.white : Colors.grey[700],
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
@@ -252,24 +221,27 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-class _BookingCard extends StatelessWidget {
+class _VendorBookingCard extends StatelessWidget {
   final BookingModel booking;
   final VoidCallback onRefresh;
 
-  const _BookingCard({required this.booking, required this.onRefresh});
+  const _VendorBookingCard({
+    required this.booking,
+    required this.onRefresh,
+  });
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return const Color(0xFFF59E0B);
+        return Colors.orange;
       case 'confirmed':
-        return const Color(0xFF10B981);
+        return Colors.green;
       case 'cancelled':
-        return const Color(0xFFEF4444);
+        return Colors.red;
       case 'completed':
-        return const Color(0xFF4F46E5);
+        return Colors.blue;
       default:
-        return const Color(0xFF6B7280);
+        return Colors.grey;
     }
   }
 
@@ -288,31 +260,100 @@ class _BookingCard extends StatelessWidget {
     }
   }
 
+  void _showBookingActions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Update Booking Status',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (booking.status.toLowerCase() == 'pending') ...[
+              _ActionButton(
+                icon: Icons.check_circle,
+                label: 'Confirm Booking',
+                color: Colors.green,
+                onTap: () {
+                  Navigator.pop(context);
+                  _updateStatus(context, 'confirmed');
+                },
+              ),
+              const SizedBox(height: 12),
+              _ActionButton(
+                icon: Icons.cancel,
+                label: 'Decline Booking',
+                color: Colors.red,
+                onTap: () {
+                  Navigator.pop(context);
+                  _updateStatus(context, 'cancelled');
+                },
+              ),
+            ],
+            if (booking.status.toLowerCase() == 'confirmed') ...[
+              _ActionButton(
+                icon: Icons.done_all,
+                label: 'Mark as Completed',
+                color: Colors.blue,
+                onTap: () {
+                  Navigator.pop(context);
+                  _updateStatus(context, 'completed');
+                },
+              ),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _updateStatus(BuildContext context, String status) async {
+    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+    final error = await bookingProvider.updateBookingStatus(booking.id, status);
+
+    if (context.mounted) {
+      if (error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Booking $status successfully')),
+        );
+        onRefresh();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BookingDetailScreen(booking: booking),
-            ),
-          ).then((_) => onRefresh());
-        },
-        borderRadius: BorderRadius.circular(16),
+        onTap: () => _showBookingActions(context),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -320,45 +361,23 @@ class _BookingCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Text(
-                        booking.vendorName[0].toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          booking.vendorName,
+                          booking.customerName,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1F2937),
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Text(
-                          booking.vendorCategory,
-                          style: const TextStyle(
-                            color: Color(0xFF6B7280),
-                            fontSize: 13,
+                          booking.eventName,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -378,7 +397,7 @@ class _BookingCard extends StatelessWidget {
                       children: [
                         Icon(
                           _getStatusIcon(booking.status),
-                          size: 14,
+                          size: 16,
                           color: _getStatusColor(booking.status),
                         ),
                         const SizedBox(width: 4),
@@ -386,7 +405,7 @@ class _BookingCard extends StatelessWidget {
                           booking.status.toUpperCase(),
                           style: TextStyle(
                             color: _getStatusColor(booking.status),
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -397,48 +416,42 @@ class _BookingCard extends StatelessWidget {
               ),
               const Divider(height: 24),
               _InfoRow(
-                icon: Icons.event_outlined,
-                label: booking.eventName,
+                icon: Icons.business_center,
+                label: booking.vendorCategory,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               _InfoRow(
-                icon: Icons.calendar_today_outlined,
+                icon: Icons.calendar_today,
                 label: DateFormat('MMM dd, yyyy').format(booking.eventDate),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4F46E5).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.attach_money,
-                          size: 16,
-                          color: Color(0xFF4F46E5),
-                        ),
-                      ),
+                      Icon(Icons.attach_money, size: 20, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
                         'NPR ${booking.price.toStringAsFixed(0)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
-                          color: Color(0xFF4F46E5),
+                          color: Color(0xFF6C63FF),
                         ),
                       ),
                     ],
                   ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: Colors.grey[400],
-                  ),
+                  if (booking.status.toLowerCase() == 'pending' ||
+                      booking.status.toLowerCase() == 'confirmed')
+                    TextButton.icon(
+                      onPressed: () => _showBookingActions(context),
+                      icon: const Icon(Icons.edit, size: 16),
+                      label: const Text('Manage'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF6C63FF),
+                      ),
+                    ),
                 ],
               ),
             ],
@@ -462,18 +475,57 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: const Color(0xFF6B7280)),
+        Icon(icon, size: 18, color: Colors.grey[600]),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF1F2937),
-              fontSize: 14,
-            ),
-          ),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey[700]),
         ),
       ],
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

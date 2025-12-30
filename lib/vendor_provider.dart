@@ -276,7 +276,7 @@ class VendorProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error initializing sample vendors: $e');
+      // Error initializing sample vendors
     }
   }
 
@@ -301,10 +301,7 @@ class VendorProvider with ChangeNotifier {
       _vendors = snapshot.docs
           .map((doc) => VendorModel.fromMap(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
-      
-      print('Loaded ${_vendors.length} vendors');
     } catch (e) {
-      print('Error loading vendors: $e');
       _error = 'Failed to load vendors: $e';
     }
 
@@ -328,13 +325,13 @@ class VendorProvider with ChangeNotifier {
           .toList();
       notifyListeners();
     } catch (e) {
-      print('Error loading packages: $e');
+      // Error loading packages
     }
   }
 
   Future<String?> createVendor(VendorModel vendor) async {
     try {
-      final docRef = await _firestore.collection('vendors').add({
+      await _firestore.collection('vendors').add({
         'name': vendor.name,
         'category': vendor.category,
         'description': vendor.description,
@@ -348,13 +345,10 @@ class VendorProvider with ChangeNotifier {
         'portfolioImages': vendor.portfolioImages,
       });
       
-      print('Vendor created successfully with ID: ${docRef.id}');
-      
       // Refresh vendor list
       await loadVendors();
       return null;
     } catch (e) {
-      print('Error creating vendor: $e');
       return 'Failed to register vendor: $e';
     }
   }
@@ -371,7 +365,7 @@ class VendorProvider with ChangeNotifier {
   }) async {
     try {
       // Create vendor document with userId reference
-      final docRef = await _firestore.collection('vendors').add({
+      await _firestore.collection('vendors').add({
         'userId': userId,
         'name': businessName,
         'category': category,
@@ -388,13 +382,10 @@ class VendorProvider with ChangeNotifier {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
-      print('Vendor created from registration with ID: ${docRef.id}');
-      
       // Refresh vendor list
       await loadVendors();
       return null;
     } catch (e) {
-      print('Error creating vendor from registration: $e');
       return 'Failed to create vendor profile: $e';
     }
   }
@@ -412,7 +403,6 @@ class VendorProvider with ChangeNotifier {
       }
       return null;
     } catch (e) {
-      print('Error getting vendor by user ID: $e');
       return null;
     }
   }
@@ -470,7 +460,6 @@ class VendorProvider with ChangeNotifier {
       await loadVendors();
       return null;
     } catch (e) {
-      print('Error updating vendor profile: $e');
       return 'Failed to update vendor profile: $e';
     }
   }
@@ -481,7 +470,7 @@ class VendorProvider with ChangeNotifier {
       await loadVendors();
       return null;
     } catch (e) {
-      print('Error deleting vendor: $e');
+
       return 'Failed to delete vendor: $e';
     }
   }

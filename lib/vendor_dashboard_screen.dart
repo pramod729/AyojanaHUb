@@ -1,4 +1,5 @@
 import 'package:ayojana_hub/auth_provider.dart';
+import 'package:ayojana_hub/vendor_bookings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -13,16 +14,16 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text('Vendor Dashboard'),
         centerTitle: true,
         elevation: 0,
+        backgroundColor: Colors.white,
         actions: [
           IconButton(
-            onPressed: () {
-              Navigator.of(context).pushNamed('/profile');
-            },
-            icon: const Icon(Icons.person),
+            onPressed: () => Navigator.of(context).pushNamed('/profile'),
+            icon: const Icon(Icons.person_outline),
           ),
         ],
       ),
@@ -37,174 +38,296 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Business Summary Card
-                Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Business Profile',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(40),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF4F46E5).withOpacity(0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            (user.businessName ?? user.name)[0].toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        _InfoRow(
-                          label: 'Business Name',
-                          value: user.businessName ?? 'Not set',
-                        ),
-                        const SizedBox(height: 12),
-                        _InfoRow(
-                          label: 'Category',
-                          value: user.vendorCategory ?? 'Not set',
-                        ),
-                        const SizedBox(height: 12),
-                        _InfoRow(
-                          label: 'Location',
-                          value: user.vendorLocation ?? 'Not set',
-                        ),
-                        const SizedBox(height: 12),
-                        _InfoRow(
-                          label: 'Phone',
-                          value: user.phone,
-                        ),
-                        const SizedBox(height: 12),
-                        _InfoRow(
-                          label: 'Email',
-                          value: user.email,
-                        ),
-                        if (user.vendorDescription != null) ...[
-                          const SizedBox(height: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Description',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(user.vendorDescription!),
-                            ],
-                          ),
-                        ],
-                        if (user.vendorServices != null &&
-                            user.vendorServices!.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Services',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: user.vendorServices!
-                                    .map(
-                                      (service) => Chip(
-                                        label: Text(service),
-                                        backgroundColor:
-                                            Colors.blue.withOpacity(0.2),
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Action Buttons
-                const Text(
-                  'Quick Actions',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const EditVendorProfileScreen(),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit Business Profile'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _showCommingSoon();
-                  },
-                  icon: const Icon(Icons.image),
-                  label: const Text('Manage Portfolio'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/my-bookings');
-                  },
-                  icon: const Icon(Icons.calendar_today),
-                  label: const Text('View Bookings'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _showCommingSoon();
-                  },
-                  icon: const Icon(Icons.star),
-                  label: const Text('View Reviews & Ratings'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                OutlinedButton.icon(
-                  onPressed: _logout,
-                  icon: const Icon(Icons.logout, color: Colors.red),
-                  label: const Text(
-                    'Logout',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: const BorderSide(color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        user.businessName ?? user.name,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4F46E5).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          user.vendorCategory ?? 'Vendor',
+                          style: const TextStyle(
+                            color: Color(0xFF4F46E5),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Business Info',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _InfoCard(
+                        children: [
+                          _InfoItem(
+                            icon: Icons.location_on_outlined,
+                            label: 'Location',
+                            value: user.vendorLocation ?? 'Not set',
+                          ),
+                          const Divider(height: 24),
+                          _InfoItem(
+                            icon: Icons.phone_outlined,
+                            label: 'Phone',
+                            value: user.phone,
+                          ),
+                          const Divider(height: 24),
+                          _InfoItem(
+                            icon: Icons.email_outlined,
+                            label: 'Email',
+                            value: user.email,
+                          ),
+                        ],
+                      ),
+                      if (user.vendorDescription != null) ...[
+                        const SizedBox(height: 16),
+                        _InfoCard(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF4F46E5).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.description_outlined,
+                                    color: Color(0xFF4F46E5),
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Description',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              user.vendorDescription!,
+                              style: const TextStyle(
+                                color: Color(0xFF1F2937),
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (user.vendorServices != null && user.vendorServices!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _InfoCard(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF4F46E5).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.stars_outlined,
+                                    color: Color(0xFF4F46E5),
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Services',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: user.vendorServices!
+                                  .map((service) => Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF4F46E5).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: const Color(0xFF4F46E5).withOpacity(0.2),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          service,
+                                          style: const TextStyle(
+                                            color: Color(0xFF4F46E5),
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ))
+                                  .toList(),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Quick Actions',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _ActionButton(
+                        icon: Icons.business_center_outlined,
+                        label: 'Event Opportunities',
+                        color: const Color(0xFF6C63FF),
+                        onTap: () {
+                          Navigator.of(context).pushNamed('/vendor-opportunities');
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _ActionButton(
+                        icon: Icons.edit_outlined,
+                        label: 'Edit Business Profile',
+                        color: const Color(0xFF4F46E5),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const EditVendorProfileScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _ActionButton(
+                        icon: Icons.mail_outlined,
+                        label: 'My Proposals',
+                        color: const Color(0xFF8B5CF6),
+                        onTap: () {
+                          Navigator.of(context).pushNamed('/vendor-proposals');
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _ActionButton(
+                        icon: Icons.calendar_today_outlined,
+                        label: 'View Bookings',
+                        color: const Color(0xFF10B981),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const VendorBookingsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _ActionButton(
+                        icon: Icons.image_outlined,
+                        label: 'Manage Portfolio',
+                        color: const Color(0xFF6366F1),
+                        onTap: _showCommingSoon,
+                      ),
+                      const SizedBox(height: 12),
+                      _ActionButton(
+                        icon: Icons.star_outline,
+                        label: 'Reviews & Ratings',
+                        color: const Color(0xFFF59E0B),
+                        onTap: _showCommingSoon,
+                      ),
+                      const SizedBox(height: 24),
+                      OutlinedButton.icon(
+                        onPressed: _logout,
+                        icon: const Icon(Icons.logout, color: Color(0xFFEF4444)),
+                        label: const Text('Logout'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFEF4444),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: const BorderSide(color: Color(0xFFEF4444)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -217,6 +340,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
@@ -224,16 +348,16 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             onPressed: Navigator.of(context).pop,
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                '/login',
-                (route) => false,
-              );
+              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
             },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            child: const Text('Logout'),
           ),
         ],
       ),
@@ -242,42 +366,166 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
 
   void _showCommingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Feature coming soon!')),
+      const SnackBar(
+        content: Text('Feature coming soon!'),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _InfoCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _InfoCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
 
-  const _InfoRow({
+  const _InfoItem({
+    required this.icon,
     required this.label,
     required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-            color: Colors.grey,
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4F46E5).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            color: const Color(0xFF4F46E5),
+            size: 20,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  color: Color(0xFF6B7280),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF1F2937),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -286,8 +534,7 @@ class EditVendorProfileScreen extends StatefulWidget {
   const EditVendorProfileScreen({super.key});
 
   @override
-  State<EditVendorProfileScreen> createState() =>
-      _EditVendorProfileScreenState();
+  State<EditVendorProfileScreen> createState() => _EditVendorProfileScreenState();
 }
 
 class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
@@ -361,12 +608,9 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final user = authProvider.userModel;
 
-    _businessNameController =
-        TextEditingController(text: user?.businessName ?? '');
-    _locationController =
-        TextEditingController(text: user?.vendorLocation ?? '');
-    _descriptionController =
-        TextEditingController(text: user?.vendorDescription ?? '');
+    _businessNameController = TextEditingController(text: user?.businessName ?? '');
+    _locationController = TextEditingController(text: user?.vendorLocation ?? '');
+    _descriptionController = TextEditingController(text: user?.vendorDescription ?? '');
     _phoneController = TextEditingController(text: user?.phone ?? '');
 
     _selectedCategory = user?.vendorCategory ?? 'Catering';
@@ -387,7 +631,10 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
 
     if (_selectedServices.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one service')),
+        const SnackBar(
+          content: Text('Please select at least one service'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -407,12 +654,18 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
 
     if (error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully!')),
+        const SnackBar(
+          content: Text('Profile updated successfully!'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       Navigator.of(context).pop();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(
+          content: Text(error),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -420,9 +673,12 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
-        title: const Text('Edit Business Profile'),
+        title: const Text('Edit Profile'),
         centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -433,12 +689,9 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
             children: [
               TextFormField(
                 controller: _businessNameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Business Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  prefixIcon: const Icon(Icons.business),
+                  prefixIcon: Icon(Icons.business),
                 ),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
@@ -450,12 +703,9 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Category',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  prefixIcon: const Icon(Icons.category),
+                  prefixIcon: Icon(Icons.category),
                 ),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
@@ -475,12 +725,9 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _locationController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Location',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  prefixIcon: const Icon(Icons.location_on),
+                  prefixIcon: Icon(Icons.location_on),
                 ),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
@@ -493,12 +740,9 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Phone',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  prefixIcon: const Icon(Icons.phone),
+                  prefixIcon: Icon(Icons.phone),
                 ),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
@@ -511,12 +755,10 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 4,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Business Description',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  prefixIcon: const Icon(Icons.description),
+                  prefixIcon: Icon(Icons.description),
+                  alignLabelWithHint: true,
                 ),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
@@ -526,34 +768,52 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
                 },
               ),
               const SizedBox(height: 24),
-              const Text(
-                'Services Offered',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              ..._servicesByCategory[_selectedCategory]!.map(
-                (service) => CheckboxListTile(
-                  title: Text(service),
-                  value: _selectedServices.contains(service),
-                  onChanged: (selected) {
-                    setState(() {
-                      if (selected ?? false) {
-                        _selectedServices.add(service);
-                      } else {
-                        _selectedServices.remove(service);
-                      }
-                    });
-                  },
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Services Offered',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._servicesByCategory[_selectedCategory]!.map(
+                      (service) => CheckboxListTile(
+                        title: Text(service),
+                        value: _selectedServices.contains(service),
+                        onChanged: (selected) {
+                          setState(() {
+                            if (selected ?? false) {
+                              _selectedServices.add(service);
+                            } else {
+                              _selectedServices.remove(service);
+                            }
+                          });
+                        },
+                        activeColor: const Color(0xFF4F46E5),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
               Consumer<AuthProvider>(
                 builder: (context, authProvider, _) {
                   return ElevatedButton(
-                    onPressed:
-                        authProvider.isLoading ? null : _updateProfile,
+                    onPressed: authProvider.isLoading ? null : _updateProfile,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: authProvider.isLoading
                         ? const SizedBox(
@@ -561,12 +821,14 @@ class _EditVendorProfileScreenState extends State<EditVendorProfileScreen> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
                             ),
                           )
                         : const Text('Update Profile'),
                   );
                 },
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),

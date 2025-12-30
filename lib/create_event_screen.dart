@@ -22,6 +22,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   
   String _selectedEventType = 'Wedding';
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 30));
+  List<String> _selectedServices = [];
   
   final List<String> _eventTypes = [
     'Wedding',
@@ -40,6 +41,12 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _updateRequiredServices();
+  }
+
+  @override
   void dispose() {
     _eventNameController.dispose();
     _locationController.dispose();
@@ -47,6 +54,13 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _guestCountController.dispose();
     _budgetController.dispose();
     super.dispose();
+  }
+
+  void _updateRequiredServices() {
+    final eventProvider = Provider.of<EventProvider>(context, listen: false);
+    setState(() {
+      _selectedServices = eventProvider.getRequiredServicesForEventType(_selectedEventType);
+    });
   }
 
   Future<void> _selectDate() async {
@@ -73,29 +87,47 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       id: '',
       userId: authProvider.user!.uid,
       userName: authProvider.userModel!.name,
-      eventType: _selectedEventType,
       eventName: _eventNameController.text.trim(),
+      eventType: _selectedEventType,
       eventDate: _selectedDate,
       location: _locationController.text.trim(),
       description: _descriptionController.text.trim(),
-      guestCount: int.parse(_guestCountController.text),
-      budget: double.tryParse(_budgetController.text),
-      status: 'planning',
+      guestCount: int.parse(_guestCountController.text.trim()),
+      budget: double.parse(_budgetController.text.trim()),
+      status: 'awaiting_proposals',
       createdAt: DateTime.now(),
+      requiredServices: _selectedServices,
+      proposalCount: 0,
+    );
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     final error = await eventProvider.createEvent(event);
 
     if (!mounted) return;
+    Navigator.pop(context);
 
     if (error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Event created successfully!')),
+        const SnackBar(
+          content: Text('Event created! Vendors will be notified to submit proposals.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
       );
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -103,25 +135,59 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: const Text('Create New Event'),
+        elevation: 0,
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Event Type selection using ChoiceChips for quicker selection
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF4F46E5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.celebration, color: Colors.white, size: 48),
+                    SizedBox(height: 12),
+                    Text(
+                      'Plan Your Perfect Event',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Vendors will compete with their best proposals',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Event Type',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -133,25 +199,83 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                         onSelected: (_) {
                           setState(() {
                             _selectedEventType = type;
+                            _updateRequiredServices();
                           });
                         },
                         selectedColor: const Color(0xFF6C63FF),
+                        backgroundColor: Colors.white,
                         labelStyle: TextStyle(
-                          color: selected ? Colors.white : Colors.black,
+                          color: selected ? Colors.white : Colors.black87,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                         ),
+                        elevation: 2,
                       );
                     }).toList(),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0E7FF),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF6C63FF).withOpacity(0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: const Color(0xFF6C63FF), size: 20),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Required Services',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: _selectedServices.map((service) {
+                        return Chip(
+                          label: Text(service, style: const TextStyle(fontSize: 12)),
+                          avatar: const Icon(Icons.check_circle, size: 16),
+                          backgroundColor: Colors.white,
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Vendors in these categories will be notified',
+                      style: TextStyle(fontSize: 11, color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _eventNameController,
                 decoration: InputDecoration(
                   labelText: 'Event Name',
-                  prefixIcon: const Icon(Icons.event),
+                  hintText: 'e.g., Sarah & John Wedding',
+                  prefixIcon: const Icon(Icons.event, color: Color(0xFF6C63FF)),
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -167,13 +291,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 child: InputDecorator(
                   decoration: InputDecoration(
                     labelText: 'Event Date',
-                    prefixIcon: const Icon(Icons.calendar_today),
+                    prefixIcon: const Icon(Icons.calendar_today, color: Color(0xFF6C63FF)),
+                    filled: true,
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
                     ),
                   ),
                   child: Text(
-                    DateFormat('MMM dd, yyyy').format(_selectedDate),
+                    DateFormat('EEEE, MMMM dd, yyyy').format(_selectedDate),
+                    style: const TextStyle(fontSize: 16),
                   ),
                 ),
               ),
@@ -182,9 +314,21 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 controller: _locationController,
                 decoration: InputDecoration(
                   labelText: 'Location',
-                  prefixIcon: const Icon(Icons.location_on),
+                  hintText: 'e.g., Kathmandu, Nepal',
+                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF6C63FF)),
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -195,37 +339,67 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _guestCountController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Expected Guests',
-                  prefixIcon: const Icon(Icons.people),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _guestCountController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Expected Guests',
+                        prefixIcon: const Icon(Icons.people, color: Color(0xFF6C63FF)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        if (int.tryParse(value) == null) {
+                          return 'Invalid';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter guest count';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _budgetController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Budget (Optional)',
-                  prefixIcon: const Icon(Icons.attach_money),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _budgetController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Budget (NPR)',
+                        prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF6C63FF)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -233,9 +407,24 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 maxLines: 4,
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  prefixIcon: const Icon(Icons.description),
+                  hintText: 'Tell vendors about your event requirements...',
+                  prefixIcon: const Padding(
+                    padding: EdgeInsets.only(bottom: 60),
+                    child: Icon(Icons.description, color: Color(0xFF6C63FF)),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
                   ),
                 ),
                 validator: (value) {
@@ -245,20 +434,34 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               ElevatedButton(
                 onPressed: _createEvent,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  backgroundColor: const Color(0xFF6C63FF),
+                  elevation: 4,
                 ),
-                child: const Text(
-                  'Create Event',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.send, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'Create Event & Get Proposals',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

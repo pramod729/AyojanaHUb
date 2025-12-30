@@ -8,8 +8,8 @@ class BookingModel {
   final String customerName;
   final String vendorId;
   final String vendorName;
-  final String packageId;
-  final String packageName;
+  final String proposalId;
+  final String vendorCategory;
   final double price;
   final DateTime bookingDate;
   final DateTime eventDate;
@@ -25,8 +25,8 @@ class BookingModel {
     required this.customerName,
     required this.vendorId,
     required this.vendorName,
-    required this.packageId,
-    required this.packageName,
+    required this.proposalId,
+    required this.vendorCategory,
     required this.price,
     required this.bookingDate,
     required this.eventDate,
@@ -36,6 +36,10 @@ class BookingModel {
   });
 
   factory BookingModel.fromMap(Map<String, dynamic> map, String id) {
+    final bookingTimestamp = map['bookingDate'] as Timestamp?;
+    final eventTimestamp = map['eventDate'] as Timestamp?;
+    final createdAtTimestamp = map['createdAt'] as Timestamp?;
+
     return BookingModel(
       id: id,
       eventId: map['eventId'] ?? '',
@@ -44,14 +48,14 @@ class BookingModel {
       customerName: map['customerName'] ?? '',
       vendorId: map['vendorId'] ?? '',
       vendorName: map['vendorName'] ?? '',
-      packageId: map['packageId'] ?? '',
-      packageName: map['packageName'] ?? '',
+      proposalId: map['proposalId'] ?? '',
+      vendorCategory: map['vendorCategory'] ?? '',
       price: (map['price'] ?? 0).toDouble(),
-      bookingDate: (map['bookingDate'] as Timestamp).toDate(),
-      eventDate: (map['eventDate'] as Timestamp).toDate(),
-      status: map['status'] ?? 'pending',
+      bookingDate: (bookingTimestamp ?? Timestamp.now()).toDate(),
+      eventDate: (eventTimestamp ?? Timestamp.now()).toDate(),
+      status: map['status'] ?? 'confirmed',
       notes: map['notes'],
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      createdAt: (createdAtTimestamp ?? Timestamp.now()).toDate(),
     );
   }
 
@@ -63,8 +67,8 @@ class BookingModel {
       'customerName': customerName,
       'vendorId': vendorId,
       'vendorName': vendorName,
-      'packageId': packageId,
-      'packageName': packageName,
+      'proposalId': proposalId,
+      'vendorCategory': vendorCategory,
       'price': price,
       'bookingDate': Timestamp.fromDate(bookingDate),
       'eventDate': Timestamp.fromDate(eventDate),

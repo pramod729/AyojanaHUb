@@ -196,6 +196,7 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
                           return _PackageCard(
                             package: package,
                             vendorName: widget.vendor.name,
+                            vendorId: widget.vendor.id,
                           );
                         }).toList(),
                       );
@@ -243,18 +244,24 @@ class _ContactRow extends StatelessWidget {
 class _PackageCard extends StatelessWidget {
   final PackageModel package;
   final String vendorName;
+  final String vendorId;
 
   const _PackageCard({
     required this.package,
     required this.vendorName,
+    required this.vendorId,
   });
 
-  void _showBookingDialog(BuildContext context) {
+  Future<void> _showBookingDialog(BuildContext context) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Book Package'),
-        content: Text('Do you want to book "${package.name}"?'),
+        title: const Text('Book This Vendor'),
+        content: const Text(
+          'To book this vendor, please create an event first. '
+          'The vendor will then submit a proposal for your event, '
+          'and you can review and accept it.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -263,14 +270,9 @@ class _PackageCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              // TODO: Implement booking logic
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Booking feature will be implemented'),
-                ),
-              );
+              Navigator.pushNamed(context, '/create-event');
             },
-            child: const Text('Confirm'),
+            child: const Text('Create Event'),
           ),
         ],
       ),

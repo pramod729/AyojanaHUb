@@ -128,8 +128,8 @@ class BookingDetailScreen extends StatelessWidget {
                   ),
                   _InfoRow(
                     icon: Icons.card_giftcard,
-                    label: 'Package',
-                    value: booking.packageName,
+                    label: 'Service',
+                    value: booking.vendorCategory,
                   ),
                   _InfoRow(
                     icon: Icons.event,

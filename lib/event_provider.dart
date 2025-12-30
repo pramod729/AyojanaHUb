@@ -13,6 +13,26 @@ class EventProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  final Map<String, List<String>> _eventServiceMapping = {
+    'Wedding': ['Catering', 'Photography', 'Decoration', 'DJ & Music', 'Venue'],
+    'Birthday Party': ['Catering', 'Decoration', 'DJ & Music', 'Photography'],
+    'Family Function': ['Catering', 'Venue'],
+    'Anniversary': ['Catering', 'Photography', 'Decoration'],
+    'Engagement': ['Catering', 'Photography', 'Decoration', 'Venue'],
+    'Reception': ['Catering', 'Photography', 'Decoration', 'DJ & Music', 'Venue'],
+    'Baby Shower': ['Catering', 'Decoration'],
+    'Corporate Event': ['Catering', 'Photography', 'Venue'],
+    'Seminar': ['Catering', 'Venue'],
+    'Workshop': ['Catering', 'Venue'],
+    'Conference': ['Catering', 'Photography', 'Venue'],
+    'Party': ['Catering', 'DJ & Music', 'Decoration'],
+    'Other': ['Catering'],
+  };
+
+  List<String> getRequiredServicesForEventType(String eventType) {
+    return _eventServiceMapping[eventType] ?? ['Catering'];
+  }
+
   Future<void> loadMyEvents(String userId) async {
     if (_isLoading) return; // Prevent multiple simultaneous loads
     
@@ -30,9 +50,7 @@ class EventProvider with ChangeNotifier {
       _events = snapshot.docs
           .map((doc) => EventModel.fromMap(doc.data(), doc.id))
           .toList();
-      print('Loaded ${_events.length} events');
     } catch (e) {
-      print('Error loading events: $e');
       _error = e.toString();
     }
 
@@ -42,11 +60,43 @@ class EventProvider with ChangeNotifier {
 
   Future<String?> createEvent(EventModel event) async {
     try {
-      await _firestore.collection('events').add(event.toMap());
+      final eventRef = await _firestore.collection('events').add(event.toMap());
+      
+      await _notifyMatchingVendors(eventRef.id, event);
+      
       return null;
     } catch (e) {
-      print('Error creating event: $e');
-      return 'Failed to create event: $e';
+      return 'Failed to create event: ${e.toString()}';
+    }
+  }
+
+  Future<void> _notifyMatchingVendors(String eventId, EventModel event) async {
+    try {
+      final usersSnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'vendor')
+          .get();
+
+      for (var userDoc in usersSnapshot.docs) {
+        final userData = userDoc.data();
+        final vendorCategory = userData['vendorCategory'] as String?;
+        
+        if (vendorCategory != null && event.requiredServices.contains(vendorCategory)) {
+          await _firestore.collection('notifications').add({
+            'userId': userDoc.id,
+            'type': 'new_event_opportunity',
+            'title': 'New Event Opportunity',
+            'message': 'New ${event.eventType} event "${event.eventName}" is looking for ${vendorCategory} services',
+            'eventId': eventId,
+            'eventName': event.eventName,
+            'eventType': event.eventType,
+            'isRead': false,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    } catch (e) {
+      // Error notifying vendors
     }
   }
 
@@ -55,7 +105,6 @@ class EventProvider with ChangeNotifier {
       await _firestore.collection('events').doc(eventId).update(data);
       return null;
     } catch (e) {
-      print('Error updating event: $e');
       return 'Failed to update event';
     }
   }

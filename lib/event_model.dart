@@ -13,6 +13,8 @@ class EventModel {
   final double? budget;
   final String status;
   final DateTime createdAt;
+  final int proposalCount;
+  final List<String> requiredServices;
 
   EventModel({
     required this.id,
@@ -27,6 +29,8 @@ class EventModel {
     this.budget,
     required this.status,
     required this.createdAt,
+    this.proposalCount = 0,
+    this.requiredServices = const [],
   });
 
   factory EventModel.fromMap(Map<String, dynamic> map, String id) {
@@ -43,6 +47,8 @@ class EventModel {
       budget: map['budget']?.toDouble(),
       status: map['status'] ?? 'planning',
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      proposalCount: map['proposalCount'] ?? 0,
+      requiredServices: List<String>.from(map['requiredServices'] ?? []),
     );
   }
 
@@ -57,6 +63,8 @@ class EventModel {
       'description': description,
       'guestCount': guestCount,
       'budget': budget,
+      'proposalCount': proposalCount,
+      'requiredServices': requiredServices,
       'status': status,
       'createdAt': Timestamp.fromDate(createdAt),
     };
