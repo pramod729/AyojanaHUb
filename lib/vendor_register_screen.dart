@@ -475,14 +475,17 @@ class _VendorRegisterScreenState extends State<VendorRegisterScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              ..._servicesByCategory[_selectedCategory]!.map(
+              ...(_servicesByCategory[_selectedCategory] ?? []).map(
                 (service) => CheckboxListTile(
+                  key: ValueKey(service),
                   title: Text(service),
                   value: _selectedServices.contains(service),
                   onChanged: (selected) {
                     setState(() {
                       if (selected ?? false) {
-                        _selectedServices.add(service);
+                        if (!_selectedServices.contains(service)) {
+                          _selectedServices.add(service);
+                        }
                       } else {
                         _selectedServices.remove(service);
                       }

@@ -1,13 +1,41 @@
 import 'package:ayojana_hub/booking_model.dart';
 import 'package:ayojana_hub/booking_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class BookingDetailScreen extends StatelessWidget {
+class BookingDetailScreen extends StatefulWidget {
   final BookingModel booking;
 
   const BookingDetailScreen({super.key, required this.booking});
+
+  @override
+  State<BookingDetailScreen> createState() => _BookingDetailScreenState();
+}
+
+class _BookingDetailScreenState extends State<BookingDetailScreen> {
+  Map<String, dynamic>? _docData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBookingDoc();
+  }
+
+  Future<void> _loadBookingDoc() async {
+    if (widget.booking.id.isEmpty) return;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('bookings').doc(widget.booking.id).get();
+      if (doc.exists) {
+        setState(() {
+          _docData = doc.data();
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -48,7 +76,7 @@ class BookingDetailScreen extends StatelessWidget {
 
     if (confirm == true && context.mounted) {
       final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-      final error = await bookingProvider.cancelBooking(booking.id);
+      final error = await bookingProvider.cancelBooking(widget.booking.id);
 
       if (context.mounted) {
         if (error == null) {
@@ -67,6 +95,8 @@ class BookingDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final booking = widget.booking;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Booking Details'),
@@ -183,6 +213,28 @@ class BookingDetailScreen extends StatelessWidget {
                         ),
                         child: const Text('Cancel Booking'),
                       ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  if (_docData != null && _docData!['history'] != null) ...[
+                    const SizedBox(height: 16),
+                    const Text('Status History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Column(
+                      children: List<Widget>.from(((_docData!['history'] ?? []) as List).map((h) {
+                        final ts = h['timestamp'];
+                        final status = h['status'] ?? '';
+                        String timeLabel = '';
+                        if (ts is Timestamp) {
+                          timeLabel = DateFormat('MMM dd, yyyy – hh:mm a').format(ts.toDate());
+                        }
+                        return ListTile(
+                          dense: true,
+                          leading: Icon(Icons.circle, size: 12, color: Colors.grey[600]),
+                          title: Text(status.toString()),
+                          subtitle: Text(timeLabel),
+                        );
+                      })),
                     ),
                   ],
                 ],

@@ -433,41 +433,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                       ),
                     ),
                     const SizedBox(height: AppDimensions.paddingM),
-                    // Vendor Registration Link
-                    Center(
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Are you a vendor? ',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.pushReplacementNamed(
-                                    context,
-                                    '/vendor-register',
-                                  );
-                                },
-                                child: Text(
-                                  'Register Here',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    // (Vendor registration link moved to the Login screen)
                     const SizedBox(height: AppDimensions.paddingL),
                   ],
                 ),

@@ -1,7 +1,10 @@
 
+import 'dart:io';
+
 import 'package:ayojana_hub/usermodels.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -360,6 +363,33 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Update vendor profile error: $e');
       return 'Failed to update vendor profile. Please try again';
+    }
+  }
+
+  Future<String?> updateProfilePhoto(File file) async {
+    try {
+      if (_user == null) return 'No user logged in';
+
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('user_photos')
+          .child('${_user!.uid}.jpg');
+
+      await storageRef.putFile(file);
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      await _user!.updatePhotoURL(downloadUrl);
+
+      await _firestore.collection('users').doc(_user!.uid).update({
+        'profileImage': downloadUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await _loadUserData();
+      return null;
+    } catch (e) {
+      debugPrint('Error uploading profile photo: $e');
+      return 'Failed to upload profile photo. Please try again.';
     }
   }
 

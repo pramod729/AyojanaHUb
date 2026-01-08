@@ -17,6 +17,38 @@ service cloud.firestore {
          request.auth.uid == resource.data.vendorId);
     }
 
+    // Conversations - Allow read/write for participants
+    match /conversations/{conversationId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.customerId || 
+         request.auth.uid == resource.data.vendorId);
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.customerId || 
+         request.auth.uid == resource.data.vendorId);
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read: if request.auth != null && 
+          (request.auth.uid == resource.data.senderId || 
+           request.auth.uid == resource.data.receiverId);
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
+        allow update, delete: if request.auth != null && request.auth.uid == resource.data.senderId;
+      }
+    }
+
+    // Payments - Allow read/write for booking participants
+    match /payments/{paymentId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null;
+    }
+
+    // Notifications - Allow read/write for authenticated users
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.recipientId;
+      allow create, update: if request.auth != null;
+    }
+
     // Allow read/write for vendors collection - vendors can be read by all, but only updated by owner
     match /vendors/{vendorId} {
       allow read: if request.auth != null;

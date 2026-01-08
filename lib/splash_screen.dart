@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo Container
+                  // Logo Container (use project logo asset)
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -106,10 +106,18 @@ class _SplashScreenState extends State<SplashScreen>
                         shape: BoxShape.circle,
                         color: Colors.white,
                       ),
-                      child: const Icon(
-                        Icons.celebration,
-                        size: 70,
-                        color: Color(0xFF6C63FF),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/logo.jpg',
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const Icon(
+                            Icons.celebration,
+                            size: 70,
+                            color: Color(0xFF6C63FF),
+                          ),
+                        ),
                       ),
                     ),
                   ),

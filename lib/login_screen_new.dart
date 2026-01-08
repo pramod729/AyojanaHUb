@@ -305,6 +305,41 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                       ),
                     ),
+                    const SizedBox(height: AppDimensions.paddingS),
+
+                    // Vendor Registration Link (moved from Create Account page)
+                    Center(
+                      child: RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Are you a vendor? ',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(context, '/vendor-register');
+                                },
+                                child: Text(
+                                  'Register Here',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: AppDimensions.paddingL),
                   ],
                 ),

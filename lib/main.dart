@@ -1,5 +1,6 @@
 import 'package:ayojana_hub/auth_provider.dart';
 import 'package:ayojana_hub/booking_provider.dart';
+import 'package:ayojana_hub/chat_provider.dart';
 import 'package:ayojana_hub/create_event_screen.dart';
 import 'package:ayojana_hub/event_model.dart';
 import 'package:ayojana_hub/event_provider.dart';
@@ -9,6 +10,7 @@ import 'package:ayojana_hub/home_screen.dart';
 import 'package:ayojana_hub/login_screen_new.dart';
 import 'package:ayojana_hub/my_bookings_screen.dart';
 import 'package:ayojana_hub/my_events_screen.dart';
+import 'package:ayojana_hub/notification_service.dart';
 import 'package:ayojana_hub/profile_screen.dart';
 import 'package:ayojana_hub/proposal_provider.dart';
 import 'package:ayojana_hub/register_screen_new.dart';
@@ -24,6 +26,8 @@ import 'package:ayojana_hub/vendor_register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'package:ayojana_hub/admin_provider.dart';
+import 'package:ayojana_hub/admin_analytics_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +36,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // Initialize notification service
+    NotificationService().initializeNotifications();
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
   }
@@ -47,10 +53,12 @@ class AyojanaHubApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => VendorProvider()),
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => ProposalProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp(
         title: 'Ayojana Hub',
@@ -72,6 +80,7 @@ class AyojanaHubApp extends StatelessWidget {
           '/vendor-proposals': (context) => const VendorProposalsScreen(),
           '/my-bookings': (context) => const MyBookingsScreen(),
           '/profile': (context) => const ProfileScreen(),
+          '/admin-analytics': (context) => const AdminAnalyticsScreen(),
         },
         onGenerateRoute: (settings) {
           if (settings.name == '/submit-proposal') {
